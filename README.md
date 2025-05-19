@@ -1,377 +1,273 @@
-Kubernetes Health and Cost Manager
+# KubeCostGuard
 
-A comprehensive Go-based tool that combines Kubernetes health monitoring with cost optimization capabilities would provide significant value to the Kubernetes ecosystem. Here's how we could approach this:
-Core Features to Consider
 
-Health Monitoring
+## Overview
 
-Pod/node health status tracking
-Resource utilization metrics
-API server response times
-Control plane component health
+KubeCostGuard is an open-source Kubernetes tool that combines health monitoring with cost optimization capabilities. It helps you maintain the health of your Kubernetes clusters while optimizing resource usage and reducing cloud costs.
 
-Cost Management
+### Key Features
 
-Resource usage per namespace/pod/deployment
-Idle resource identification
-Right-sizing recommendations
-Cloud provider cost integration
+- **Health Monitoring**: Track pod, node, and control plane health metrics
+- **Cost Analysis**: Get detailed insights into your Kubernetes spending
+- **Optimization Recommendations**: Automatically identify cost-saving opportunities
+- **Multi-Cloud Support**: Works with AWS, GCP, and Azure
+- **Interactive Dashboard**: Visualize health metrics and cost data
+- **Cost Attribution**: Understand costs by namespace, deployment, and label
+- **Optimization Actions**: Apply recommendations with one click
 
-Optimization Actions
+## Quick Start
 
-Automated scaling recommendations
-Bin-packing optimizations
-Spot instance recommendations
-Namespace cost allocation
+### Using Helm
 
-Would you like me to create a more detailed project structure with code examples to help you get started? I can also help with specific aspects like:
+```bash
+# Add the KubeCostGuard Helm repository
+helm repo add kubecostguard https://github.com/ochestra-tech/kubecostguard/charts
+helm repo update
 
-Project structure and organization
-Core libraries and dependencies to consider
-Implementation approaches for key features
-Kubernetes API integration strategy
+# Install KubeCostGuard
+helm install kubecostguard kubecostguard/kubecostguard \
+  --namespace kubecostguard \
+  --create-namespace \
+  --set cloudProvider=aws
+```
 
-Which aspect would you like to focus on first?
+### Using Kubernetes Manifests
 
-Project Structure
+```bash
+# Clone the repository
+git clone https://github.com/ochestra-tech/kubecostguard.git
+cd kubecostguard
 
+# Apply Kustomize configuration
+kubectl apply -k deployments/kustomize/base
+
+# Check deployment status
+kubectl get pods -n kubecostguard
+```
+
+### Accessing the Dashboard
+
+After deploying KubeCostGuard, access the dashboard:
+
+```bash
+# Port-forward the service
+kubectl port-forward -n kubecostguard svc/kubecostguard 8080:8080
+
+# Access the dashboard at http://localhost:8080
+```
+
+## Configuration
+
+KubeCostGuard is configured via a YAML configuration file. You can customize various aspects of the monitoring, cost analysis, and optimization processes.
+
+### Basic Configuration
+
+```yaml
+kubernetes:
+  kubeconfig: ""  # Leave empty for in-cluster config
+  inCluster: true
+
+health:
+  scrapeIntervalSeconds: 60
+  enabledCollectors:
+    - node
+    - pod
+    - controlplane
+  alertThresholds:
+    cpuUtilizationPercent: 80
+    memoryUtilizationPercent: 85
+    podRestarts: 5
+
+cost:
+  updateIntervalMinutes: 15
+  cloudProvider: "aws"  # aws, gcp, azure, or leave empty for cloud-agnostic mode
+  pricingApiEndpoint: ""
+  storageBackend: "sqlite"
+
+optimization:
+  enableAutoScaling: true
+  idleResourceThreshold: 0.2
+  rightsizingThreshold: 0.6
+  enableSpotRecommender: true
+  minimumSavingsPercent: 20
+  optimizationIntervalHours: 24
+  applyRecommendations: false  # Set to true to automatically apply recommendations
+  dryRun: true  # Set to false to actually make changes
+```
+
+### Cloud Provider Configuration
+
+#### AWS
+
+```yaml
+cost:
+  cloudProvider: "aws"
+  pricingApiEndpoint: "https://pricing.us-east-1.amazonaws.com"
+```
+
+#### GCP
+
+```yaml
+cost:
+  cloudProvider: "gcp"
+  pricingApiEndpoint: "https://cloudbilling.googleapis.com/v1"
+```
+
+#### Azure
+
+```yaml
+cost:
+  cloudProvider: "azure"
+  pricingApiEndpoint: ""  # Uses default endpoint
+```
+
+## Architecture
+
+KubeCostGuard consists of several core components:
+
+1. **Health Monitor**: Collects and analyzes Kubernetes resource health metrics
+2. **Cost Analyzer**: Retrieves and processes cost data from cloud providers
+3. **Optimizer**: Generates and applies cost optimization recommendations
+4. **API Server**: Provides RESTful API endpoints for the dashboard and integrations
+5. **Storage Backend**: Persists historical data and configuration
+
+![Architecture Diagram](docs/images/architecture.png)
+
+## Development
+
+### Prerequisites
+
+- Go 1.21+
+- Docker
+- Kubernetes cluster (for testing)
+- Access to one of the supported cloud providers (for cost analysis)
+
+### Building from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/kubecostguard.git
+cd kubecostguard
+
+# Build the binary
+make build
+
+# Run locally
+./kubecostguard --config=config.yaml
+
+# Build Docker image
+make docker-build
+```
+
+### Project Structure
+
+```
 kubecostguard/
 ├── cmd/
-│ └── kubecostguard/
-│ └── main.go # Application entry point
+│   └── kubecostguard/         # Application entry point
 ├── internal/
-│ ├── api/ # API server implementation
-│ │ ├── handlers.go
-│ │ ├── middleware.go
-│ │ ├── routes.go
-│ │ └── server.go
-│ ├── config/ # Configuration management
-│ │ ├── config.go
-│ │ └── defaults.go
-│ ├── health/ # Health monitoring components
-│ │ ├── monitor.go
-│ │ ├── collectors/
-│ │ │ ├── node_collector.go
-│ │ │ ├── pod_collector.go
-│ │ │ └── controlplane_collector.go
-│ │ └── alerting/
-│ │ ├── alert_manager.go
-│ │ └── notifiers/
-│ ├── cost/ # Cost management components
-│ │ ├── analyzer.go
-│ │ ├── providers/
-│ │ │ ├── aws.go
-│ │ │ ├── gcp.go
-│ │ │ └── azure.go
-│ │ └── recommender/
-│ │ ├── rightsizing.go
-│ │ └── idle_resources.go
-│ ├── optimization/ # Optimization actions
-│ │ ├── scaler.go
-│ │ ├── binpacking.go
-│ │ └── spot_recommendations.go
-│ └── kubernetes/ # Kubernetes client interactions
-│ ├── client.go
-│ └── informers.go
-├── pkg/ # Public packages that can be imported
-│ ├── metrics/ # Metrics collection utilities
-│ │ ├── collector.go
-│ │ └── types.go
-│ └── utils/ # Utility functions
-│ ├── kubernetes.go
-│ └── cloud.go
-├── ui/ # Web UI components (optional)
-│ ├── src/
-│ └── public/
-├── deployments/ # Kubernetes deployment manifests
-│ ├── helm/
-│ └── kustomize/
-├── docs/ # Documentation
-├── examples/ # Example configurations and use cases
-├── Makefile # Build automation
-├── go.mod # Go module file
-├── go.sum
-└── README.md # Project documentation
-
-Dependencies & Technology Stack
-
-Go: Primary language (v1.21+)
-Kubernetes Libraries:
-
-client-go: For interacting with Kubernetes API
-controller-runtime: For implementing controllers
-metrics-server API: For collecting resource metrics
-
-Prometheus: For metrics collection and storage
-Cloud Provider SDKs:
-
-AWS SDK for Go
-Google Cloud Go SDK
-Azure SDK for Go
-
-Web Framework: Gin or Echo for REST API
-Database: PostgreSQL or SQLite for historical data
-UI: React or Vue.js for web dashboard (optional)
-
-Implementation Approach for Key Features
-This project will combine real-time monitoring with historical analysis to provide both immediate health insights and long-term cost optimization recommendations.
-
-Pod Collector Features:
-
-Comprehensive Pod Metrics:
-
-Pod status and phase
-Container statuses with restart counts
-Resource requests/limits and actual usage
-Pod conditions and readiness
-Owner references and QoS class
-
-Advanced Analysis:
-
-Namespace-based pod metrics
-Resource utilization tracking
-QoS class distribution
-Problematic pod identification
-
-Alert Detection:
-
-Failed or pending pods
-High restart counts
-Resource overcommitment
-Long-running pending pods
-
-Control Plane Collector Features:
+│   ├── api/                   # API server
+│   ├── config/                # Configuration management
+│   ├── cost/                  # Cost analysis
+│   │   ├── providers/         # Cloud provider integrations
+│   │   └── recommender/       # Cost optimization recommendations
+│   ├── health/                # Health monitoring
+│   │   ├── collectors/        # Metric collectors
+│   │   └── alerting/          # Alert management
+│   ├── kubernetes/            # Kubernetes client
+│   └── optimization/          # Optimization actions
+├── pkg/                       # Public packages
+├── deployments/               # Deployment manifests
+│   ├── helm/                  # Helm chart
+│   └── kustomize/             # Kustomize configuration
+├── config/                    # Configuration files
+├── ui/                        # Web UI components
+├── docs/                      # Documentation
+└── examples/                  # Example configurations
+```
 
-Component Health Monitoring:
+## API Reference
 
-API server health checks (livez/readyz endpoints)
-Controller manager status
-Scheduler status
-etcd cluster health
+KubeCostGuard provides a comprehensive REST API for integration with other tools.
 
-Cluster Information:
+### Health Endpoints
 
-Kubernetes version tracking
-Leader election status
-API error monitoring
-Component response times
+- `GET /api/health/status`: Overall health status
+- `GET /api/health/metrics`: Detailed health metrics
+- `GET /api/health/alerts`: Active alerts
 
-Advanced Features:
+### Cost Endpoints
 
-Component pod status tracking
-Container status within control plane pods
-Overall control plane health status
-Alert generation for component failures
+- `GET /api/cost/summary`: Cost summary
+- `GET /api/cost/namespaces`: Costs by namespace
+- `GET /api/cost/nodes`: Costs by node
+- `GET /api/cost/trends`: Cost trends over time
 
-Both collectors follow the same interface pattern with Start(), Stop(), Collect(), and AlertableMetrics() methods, ensuring consistent integration with the health monitoring system.
-The collectors provide rich data that can be used for:
+### Optimization Endpoints
 
-Health monitoring dashboards
-Alert generation
-Cost optimization decisions
-Capacity planning
-Troubleshooting cluster issues
+- `GET /api/optimize/recommendations`: Get optimization recommendations
+- `POST /api/optimize/apply/:id`: Apply a specific recommendation
+- `GET /api/optimize/history`: Optimization history
 
-Alert Manager Features:
+## Supported Kubernetes Distributions
 
-Alert Management:
+- Amazon EKS
+- Google GKE
+- Microsoft AKS
+- Red Hat OpenShift
+- Vanilla Kubernetes
 
-Create, track, and resolve alerts
-Alert history tracking
-Silencing/muting capabilities
-Severity levels (critical, warning, info)
+## Contributing
 
-Rule-Based Alerting:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
-Configurable alert rules with conditions
-Threshold-based triggers
-Duration requirements
-Repeat intervals for notifications
+### Development Workflow
 
-Default Alert Rules:
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `make test`
+5. Submit a pull request
 
-High CPU/memory utilization
-Pod restart thresholds
-Node not ready conditions
-Long-pending pods
-Control plane health issues
+## License
 
-Notification System:
+KubeCostGuard is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
-Multi-channel alert notifications
-Alert resolution notifications
-Silencing support
-Notification throttling
+## Community
 
-Alert Lifecycle:
+- Join our Slack channel (https://slack.kubecostguard.io)
+- Follow us on Twitter (https://twitter.com/kubecostguard)
+- Check out our blog (https://kubecostguard.io/blog)
 
-Active/resolved/silenced states
-Start time and duration tracking
-Resolution notifications
-Historical record keeping
+## FAQ
 
-The Alert Manager integrates with the collectors to evaluate metrics against rules and trigger appropriate notifications. It provides a robust foundation for monitoring cluster health and responding to issues proactively.
+### How does KubeCostGuard calculate costs?
 
-Cost Providers
+KubeCostGuard uses cloud provider APIs to retrieve current pricing information and combines it with Kubernetes resource usage metrics to calculate costs. For on-premise clusters, it uses a configurable cost model.
 
-AWS Cost Provider - Handles AWS-specific cost retrieval, pricing data, and optimization savings estimates
-GCP Cost Provider - Manages Google Cloud pricing, machine type parsing, and cost calculations
-Azure Cost Provider - Integrates with Azure APIs for VM pricing and cost management
+### Does KubeCostGuard require special permissions?
 
-Recommender Components
+Yes, KubeCostGuard needs read access to Kubernetes resources and, depending on your cloud provider, specific IAM permissions to access cost data and make optimization recommendations.
 
-Rightsizing Recommender - Identifies overprovisioned resources and generates recommendations for optimal resource allocation
-Idle Resources Recommender - Detects idle or underutilized resources across nodes, pods, deployments, and other components
+### Can KubeCostGuard automatically apply optimizations?
 
-These components provide:
+Yes, by setting `applyRecommendations: true` in the configuration, KubeCostGuard can automatically apply certain optimizations. Use the `dryRun: true` setting to simulate changes without applying them.
 
-Resource cost tracking across different cloud providers
-Intelligent rightsizing recommendations based on actual utilization
-Detection of idle resources to minimize waste
-Prioritized recommendations with confidence scores
-Estimated savings calculations
-Comprehensive metrics analysis
+### How accurate are the cost estimates?
 
-The implementation follows best practices with proper error handling, caching mechanisms, configurable thresholds, and extensible architecture. Each component integrates seamlessly with the main KubeCostGuard system to provide comprehensive cost optimization functionality.
-Would you like me to create any additional components or explain any specific implementation details?
+KubeCostGuard provides cost estimates based on current pricing information from cloud providers. While these estimates are generally accurate, actual billing may vary due to discounts, reserved instances, or other factors.
 
-calculateVariance - Calculates the statistical variance of metric values to assess how much they fluctuate over time
-estimateCPUCost - Estimates the monthly cost for CPU resources based on milli-cores
-estimateMemoryCost - Estimates the monthly cost for memory resources
-calculateUtilizationStats - Calculates peak and average utilization from metric history
-checkCustomResources - Discovers and checks custom resources that support scaling
-analyzeStatefulSetScaling - Full implementation for StatefulSet scaling analysis
-getStatefulSetMetrics - Gets metrics for StatefulSet
-calculateStatefulSetCost - Calculates cost for StatefulSet resources
-generateStatefulSetScalingActions - Generates specific scaling actions for StatefulSet
-scaleStatefulSet - Applies scaling recommendations to StatefulSet
+## Roadmap
 
-The calculateVariance function specifically:
+- [ ] Enhanced multi-cluster support
+- [ ] Machine learning-based cost forecasting
+- [ ] Custom optimization policy engine
+- [ ] Integration with CI/CD pipelines for cost-aware deployments
+- [ ] Support for additional cloud providers
+- [ ] Cost anomaly detection
 
-Takes a slice of MetricPoint values
-Calculates the mean of the values
-Computes the variance by finding the average of squared differences from the mean
-Returns 0 for datasets with less than 2 points (no variance possible)
-
-This helps the scaler determine if metrics are stable enough to make confident scaling recommendations - high variance might indicate unpredictable workloads that shouldn't be scaled automatically.RetryClaude can make mistakes. Please double-check responses. 3.7 Sonnet
-
-Cost Analyzer Interfaces: Added proper method signatures for:
-
-GetCostData(): Basic cost data retrieval
-GetNamespaceCosts(): Namespace-specific cost breakdown
-GetNamespaceCostDetails(): Detailed namespace cost data
-GetNodeCosts(): Node-specific cost breakdown
-GetNodeCostDetails(): Detailed node cost data
-GetDeploymentCosts(): Deployment cost analysis
-GetDeploymentCostDetails(): Detailed deployment cost data
-GetCostTrends(): Cost trends over time
-GetCostForecast(): Cost forecasting
-GenerateReport(): Cost report generation
-
-Enhanced API Endpoints:
-
-Added deployment cost endpoints
-Added cost trends and forecasting endpoints
-Added report generation endpoints for all services
-Added optimization simulation endpoint
-Added savings summary endpoint
-
-Improved Handler Functions:
-
-Proper error handling
-Structured response formats
-Query parameter support for filtering and pagination
-Support for multiple report formats (JSON, CSV, PDF)
-
-Better Data Structures:
-
-NamespaceCostData: Structured namespace cost information
-NodeCostData: Structured node cost information including utilization metrics
-
-Enhanced Middleware:
-
-Improved logging middleware with detailed request formatting
-Better CORS handling
-JWT and Basic auth implementation placeholders
-
-The API now provides comprehensive endpoints for monitoring costs, health, and optimizations while maintaining clean interfaces that can be easily implemented by the actual backend services.RetryClaude can make mistakes. Please double-check responses. 3.7 Sonnet
-
-Key Features:
-
-Informer Management:
-
-Manages multiple informers for different Kubernetes resources
-Handles informer lifecycle (start/stop)
-Provides cache synchronization with timeout protection
-
-Supported Resources:
-
-Nodes
-Pods
-Deployments
-StatefulSets
-Services
-Namespaces
-PersistentVolumeClaims
-HorizontalPodAutoscalers
-Jobs
-
-Event Handling:
-
-Resource add/update/delete event handlers
-Custom event handler registration
-Detailed logging of significant changes
-Thread-safe cache updates
-
-Caching:
-
-In-memory caches for all resources
-Thread-safe cache access with read/write locks
-Fast lookups by name/namespace
-
-Metrics Integration:
-
-Periodic updates from metrics-server
-Node and pod metrics collection
-Background metric updates
-
-API Methods:
-
-Get individual resources
-List all resources
-List resources by namespace
-Watch specific resources
-
-Usage Example:
-go// Create informer manager
-im, err := NewInformerManager(client)
-if err != nil {
-log.Fatal(err)
-}
-
-// Start informers
-if err := im.Start(); err != nil {
-log.Fatal(err)
-}
-
-// Add custom event handlers
-im.AddPodEventHandler(cache.ResourceEventHandlerFuncs{
-UpdateFunc: func(old, new interface{}) {
-// Handle pod updates
-},
-})
-
-// Access cached resources
-if node, ok := im.GetNode("node-1"); ok {
-// Use node
-}
-
-// List resources
-pods := im.ListPodsByNamespace("default")
-for \_, pod := range pods {
-// Process pods
-}
-
-// Cleanup
-defer im.Stop()
-The implementation ensures efficient resource monitoring with minimal API calls by using informers and caching mechanisms.RetryClaude can make mistakes. Please double-check responses.
+## Acknowledgments
+
+- The Kubernetes community
+- All our contributors and supporters
+- Open-source projects that inspired us
