@@ -235,9 +235,9 @@ KubeCostGuard is licensed under the MIT License. See [LICENSE](LICENSE) for deta
 
 ## Community
 
-- Join our Slack channel (https://slack.ochestra.io)
+- Join our Slack channel (https://join.slack.com/share/enQtODkxNjU5MDkyMDY3Ny02NmNhZGQwZjE3NWI1NzY4YjhhMmE4NzllNGE5Y2EyZmU1MmMxZGViODA2MzFlMDdlYWI4NjUzOTYxYjc4ODll)
 - Follow us on Twitter (https://twitter.com/kubecostguard)
-- Check out our blog (https://ochestra.io/blog)
+- Check out our blog (https://ochestra.io/kubeopera)
 
 ## FAQ
 
