@@ -1,0 +1,41 @@
+kubernetes:
+  kubeconfig: ""
+  inCluster: true
+
+health:
+  scrapeIntervalSeconds: 30
+  enabledCollectors:
+    - node
+    - pod
+    - controlplane
+  alertThresholds:
+    cpuUtilizationPercent: 75
+    memoryUtilizationPercent: 80
+    podRestarts: 3
+
+cost:
+  updateIntervalMinutes: 10
+  cloudProvider: "aws"
+  pricingApiEndpoint: "https://pricing.us-east-1.amazonaws.com"
+  storageBackend: "postgres"
+  storagePath: "host=db.example.com port=5432 user=kubecost password=secret dbname=kubecost sslmode=disable"
+
+optimization:
+  enableAutoScaling: true
+  idleResourceThreshold: 0.15
+  rightsizingThreshold: 0.5
+  enableSpotRecommender: true
+  minimumSavingsPercent: 25
+  optimizationIntervalHours: 12
+  applyRecommendations: true
+  dryRun: false
+
+api:
+  port: 8443
+  tlsEnabled: true
+  tlsCertPath: "/etc/kubecostguard/tls/tls.crt"
+  tlsKeyPath: "/etc/kubecostguard/tls/tls.key"
+  authentication:
+    enabled: true
+    type: "jwt"
+    jwtKey: "your-jwt-secret-key-here"

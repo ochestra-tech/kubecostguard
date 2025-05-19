@@ -1,0 +1,40 @@
+kubernetes:
+  kubeconfig: ""
+  inCluster: true
+
+health:
+  scrapeIntervalSeconds: 60
+  enabledCollectors:
+    - node
+    - pod
+  alertThresholds:
+    cpuUtilizationPercent: 80
+    memoryUtilizationPercent: 85
+    podRestarts: 5
+
+cost:
+  updateIntervalMinutes: 30
+  cloudProvider: "gcp"
+  pricingApiEndpoint: "https://cloudbilling.googleapis.com/v1"
+  storageBackend: "postgres"
+  storagePath: "host=gcp-db.example.com port=5432 user=kubecost password=secret dbname=kubecost sslmode=disable"
+
+optimization:
+  enableAutoScaling: true
+  idleResourceThreshold: 0.2
+  rightsizingThreshold: 0.6
+  enableSpotRecommender: true
+  minimumSavingsPercent: 15
+  optimizationIntervalHours: 24
+  applyRecommendations: false
+  dryRun: true
+
+api:
+  port: 8080
+  tlsEnabled: false
+  tlsCertPath: ""
+  tlsKeyPath: ""
+  authentication:
+    enabled: true
+    type: "basic"
+    jwtKey: ""  # Not used for basic auth

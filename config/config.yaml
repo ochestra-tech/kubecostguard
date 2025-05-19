@@ -1,0 +1,41 @@
+kubernetes:
+  kubeconfig: ""  # Leave empty to use in-cluster config when running in Kubernetes
+  inCluster: true
+
+health:
+  scrapeIntervalSeconds: 60
+  enabledCollectors:
+    - node
+    - pod
+    - controlplane
+  alertThresholds:
+    cpuUtilizationPercent: 80
+    memoryUtilizationPercent: 85
+    podRestarts: 5
+
+cost:
+  updateIntervalMinutes: 15
+  cloudProvider: "aws"  # Can be "aws", "gcp", "azure", or leave empty for a cloud-agnostic approach
+  pricingApiEndpoint: ""  # Leave empty to use the default endpoint for the selected provider
+  storageBackend: "sqlite"  # Can be "sqlite", "postgres", or "memory"
+  storagePath: "/data/kubecostguard.db"
+
+optimization:
+  enableAutoScaling: true
+  idleResourceThreshold: 0.2  # Resources are considered idle if utilization is below 20%
+  rightsizingThreshold: 0.6   # Resources are considered for rightsizing if utilization is below 60%
+  enableSpotRecommender: true
+  minimumSavingsPercent: 20   # Only recommend changes that save at least 20%
+  optimizationIntervalHours: 24
+  applyRecommendations: false # Set to true to automatically apply recommendations
+  dryRun: true               # Set to false to actually make changes
+
+api:
+  port: 8080
+  tlsEnabled: false
+  tlsCertPath: ""
+  tlsKeyPath: ""
+  authentication:
+    enabled: false
+    type: "jwt"   # Can be "jwt" or "basic"
+    jwtKey: ""

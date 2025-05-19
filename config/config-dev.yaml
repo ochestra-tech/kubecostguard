@@ -1,0 +1,41 @@
+kubernetes:
+  kubeconfig: "~/.kube/config"  # Path to local kubeconfig file
+  inCluster: false
+
+health:
+  scrapeIntervalSeconds: 10     # More frequent for testing
+  enabledCollectors:
+    - node
+    - pod
+    - controlplane
+  alertThresholds:
+    cpuUtilizationPercent: 90   # Higher threshold for testing
+    memoryUtilizationPercent: 90
+    podRestarts: 10
+
+cost:
+  updateIntervalMinutes: 5      # More frequent for testing
+  cloudProvider: ""             # Cloud-agnostic for testing
+  pricingApiEndpoint: ""
+  storageBackend: "memory"      # In-memory storage for testing
+  storagePath: ""
+
+optimization:
+  enableAutoScaling: true
+  idleResourceThreshold: 0.1    # More aggressive for testing
+  rightsizingThreshold: 0.4
+  enableSpotRecommender: true
+  minimumSavingsPercent: 5      # More aggressive for testing
+  optimizationIntervalHours: 1  # More frequent for testing
+  applyRecommendations: false
+  dryRun: true                  # Always true for testing
+
+api:
+  port: 8080
+  tlsEnabled: false
+  tlsCertPath: ""
+  tlsKeyPath: ""
+  authentication:
+    enabled: false
+    type: ""
+    jwtKey: ""
