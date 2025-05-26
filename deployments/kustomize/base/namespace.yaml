@@ -1,5 +1,323 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: title
+  name: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+
+---
+# File: deployments/kustomize/base/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kubecostguard
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+
+---
+# File: deployments/kustomize/base/clusterrole.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "pods", "services", "namespaces", "deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["metrics.k8s.io"]
+    resources: ["nodes", "pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments", "replicasets", "statefulsets", "daemonsets"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["autoscaling"]
+    resources: ["horizontalpodautoscalers"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch"]
+
+---
+# File: deployments/kustomize/base/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+subjects:
+  - kind: ServiceAccount
+    name: kubecostguard
+    namespace: kubecostguard
+roleRef:
+  kind: ClusterRole
+  name: kubecostguard
+  apiGroup: rbac.authorization.k8s.io
+
+---
+# File: deployments/kustomize/base/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubecostguard-config
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+data:
+  config.yaml: |
+    kubernetes:
+      kubeconfig: ""
+      inCluster: true
+
+    health:
+      scrapeIntervalSeconds: 60
+      enabledCollectors:
+        - node
+        - pod
+        - controlplane
+      alertThresholds:
+        cpuUtilizationPercent: 80
+        memoryUtilizationPercent: 85
+        podRestarts: 5
+
+    cost:
+      updateIntervalMinutes: 15
+      cloudProvider: "aws"  # Change to your cloud provider
+      pricingApiEndpoint: ""
+      storageBackend: "sqlite"
+      storagePath: "/data/kubecostguard.db"
+
+    optimization:
+      enableAutoScaling: true
+      idleResourceThreshold: 0.2
+      rightsizingThreshold: 0.6
+      enableSpotRecommender: true
+      minimumSavingsPercent: 20
+      optimizationIntervalHours: 24
+      applyRecommendations: false
+      dryRun: true
+
+    api:
+      port: 8080
+      tlsEnabled: false
+      tlsCertPath: ""
+      tlsKeyPath: ""
+      authentication:
+        enabled: false
+        type: "jwt"
+        jwtKey: ""
+
+---
+# File: deployments/kustomize/base/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubecostguard-secrets
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+type: Opaque
+data:
+  # These are example values and should be replaced in production
+  # Values are base64 encoded
+  AWS_ACCESS_KEY_ID: ""
+  AWS_SECRET_ACCESS_KEY: ""
+  GCP_SERVICE_ACCOUNT_JSON: ""
+  AZURE_CLIENT_ID: ""
+  AZURE_CLIENT_SECRET: ""
+  JWT_SECRET: ""
+
+---
+# File: deployments/kustomize/base/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubecostguard
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubecostguard
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubecostguard
+        app.kubernetes.io/part-of: kubecostguard
+    spec:
+      serviceAccountName: kubecostguard
+      containers:
+        - name: kubecostguard
+          image: yourdockerhub/kubecostguard:latest
+          imagePullPolicy: Always
+          args:
+            - "--config=/etc/kubecostguard/config.yaml"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/kubecostguard
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AWS_ACCESS_KEY_ID
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+                  optional: true
+            - name: GCP_SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: GCP_SERVICE_ACCOUNT_JSON
+                  optional: true
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AZURE_CLIENT_ID
+                  optional: true
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AZURE_CLIENT_SECRET
+                  optional: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /api/health/status
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health/status
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kubecostguard-config
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kubecostguard-data
+
+---
+# File: deployments/kustomize/base/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubecostguard
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: kubecostguard
+
+---
+# File: deployments/kustomize/base/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kubecostguard-data
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard
+
+---
+# File: deployments/kustomize/base/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubecostguard
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: kubecostguard.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubecostguard
+                port:
+                  name: http
+
+---
+# File: deployments/kustomize/base/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kubecostguard
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - clusterrole.yaml
+  - clusterrolebinding.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - pvc.yaml
+  - ingress.yaml
+
+---
+# File: deployments/kustomize/overlays/dev/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: kubecostguard-dev
+bases:
+  - ../../base
+patchesStrategicMerge:
+  - deployment-patch.
   

@@ -18,7 +18,7 @@ import (
 // GCPCostProvider implements cost retrieval for GCP resources
 type GCPCostProvider struct {
 	compute       *compute.InstancesClient
-	billing       *cloudbilling.Service
+	billing       *cloudbilling.APIService
 	catalogSvc    *billingcatalogmanagement.Service
 	projectID     string
 	zone          string

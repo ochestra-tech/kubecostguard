@@ -46,6 +46,58 @@ type RightsizingRecommendation struct {
 	NotificationChannels     []string
 }
 
+func (r RightsizingRecommendation) GetID() string { panic("implement me") }
+
+func (r RightsizingRecommendation) GetType() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetResourceName() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetPotentialSavings() float64 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetPriority() int {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetConfidence() float64 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetDescription() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetDetails() map[string]interface{} {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) GetCreatedAt() time.Time {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) Apply() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (r RightsizingRecommendation) Simulate() (map[string]interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // RightsizingRecommender generates recommendations for right-sizing resources
 type RightsizingRecommender struct {
 	k8sClient       *kubernetes.Client

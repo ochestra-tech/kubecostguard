@@ -1,273 +1,187 @@
+
+# README.md
 # KubeCostGuard
 
+KubeCostGuard is a comprehensive Kubernetes cost optimization and health monitoring tool that helps you reduce cloud costs while maintaining cluster health and performance.
 
-## Overview
+## Features
 
-KubeCostGuard is an open-source Kubernetes tool that combines health monitoring with cost optimization capabilities. It helps you maintain the health of your Kubernetes clusters while optimizing resource usage and reducing cloud costs.
+### 🏥 Health Monitoring
+- **Cluster Health**: Monitor overall cluster health and performance
+- **Node Monitoring**: Track node resource usage, conditions, and availability
+- **Pod Monitoring**: Monitor pod status, restart counts, and resource consumption
+- **Control Plane Health**: Keep track of control plane component health
+- **Alerting**: Configurable alerts with multiple notification channels (Slack, Email, Webhook)
 
-### Key Features
+### 💰 Cost Management
+- **Multi-Cloud Support**: AWS, GCP, and Azure cost tracking
+- **Cost Analysis**: Detailed cost breakdown by service, namespace, and resource
+- **Cost Recommendations**: Intelligent suggestions for cost reduction
+- **Real-time Tracking**: Continuous cost monitoring and reporting
 
-- **Health Monitoring**: Track pod, node, and control plane health metrics
-- **Cost Analysis**: Get detailed insights into your Kubernetes spending
-- **Optimization Recommendations**: Automatically identify cost-saving opportunities
-- **Multi-Cloud Support**: Works with AWS, GCP, and Azure
-- **Interactive Dashboard**: Visualize health metrics and cost data
-- **Cost Attribution**: Understand costs by namespace, deployment, and label
-- **Optimization Actions**: Apply recommendations with one click
+### ⚡ Optimization
+- **Auto-scaling**: Intelligent horizontal and vertical pod autoscaling
+- **Bin Packing**: Optimize pod placement for better resource utilization
+- **Spot Instance Recommendations**: Identify opportunities to use spot instances
+- **Rightsizing**: Recommendations for optimal resource allocation
 
 ## Quick Start
 
-### Using Helm
+### Prerequisites
+- Go 1.21+
+- Kubernetes cluster
+- kubectl configured
+- Cloud provider credentials (AWS/GCP/Azure)
 
-```bash
-# Add the KubeCostGuard Helm repository
-helm repo add kubecostguard https://github.com/ochestra-tech/kubecostguard/charts
-helm repo update
+### Installation
 
-# Install KubeCostGuard
-helm install kubecostguard kubecostguard/kubecostguard \
-  --namespace kubecostguard \
-  --create-namespace \
-  --set cloudProvider=aws
-```
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/kubecostguard.git
+   cd kubecostguard
+   ```
 
-### Using Kubernetes Manifests
+2. **Build the application**
+   ```bash
+   make build
+   ```
 
-```bash
-# Clone the repository
-git clone https://github.com/ochestra-tech/kubecostguard.git
-cd kubecostguard
+3. **Create configuration file**
+   ```yaml
+   # config.yaml
+   server:
+     port: 8080
+     host: "0.0.0.0"
+   
+   health:
+     interval: 30s
+     alert_thresholds:
+       cpu_threshold: 80.0
+       memory_threshold: 85.0
+   
+   cost:
+     providers: ["aws"]
+     update_interval: 5m
+   
+   optimization:
+     auto_scale: false
+     bin_packing: true
+     spot_recommendations: true
+   ```
 
-# Apply Kustomize configuration
-kubectl apply -k deployments/kustomize/base
+4. **Run the application**
+   ```bash
+   ./bin/kubecostguard -config=config.yaml
+   ```
 
-# Check deployment status
-kubectl get pods -n kubecostguard
-```
+### Docker Deployment
 
-### Accessing the Dashboard
+1. **Build Docker image**
+   ```bash
+   make docker-build
+   ```
 
-After deploying KubeCostGuard, access the dashboard:
+2. **Deploy with Helm**
+   ```bash
+   make deploy-helm
+   ```
 
-```bash
-# Port-forward the service
-kubectl port-forward -n kubecostguard svc/kubecostguard 8080:8080
+### API Endpoints
 
-# Access the dashboard at http://localhost:8080
-```
+- `GET /api/v1/health` - Application health check
+- `GET /api/v1/health-monitoring/cluster` - Cluster health status
+- `GET /api/v1/cost/analysis` - Cost analysis data
+- `GET /api/v1/optimization/recommendations` - Optimization recommendations
+- `GET /api/v1/metrics` - Prometheus metrics
 
 ## Configuration
 
-KubeCostGuard is configured via a YAML configuration file. You can customize various aspects of the monitoring, cost analysis, and optimization processes.
+### Environment Variables
+- `KUBECONFIG` - Path to kubeconfig file
+- `LOG_LEVEL` - Logging level (debug, info, warn, error)
 
-### Basic Configuration
-
-```yaml
-kubernetes:
-  kubeconfig: ""  # Leave empty for in-cluster config
-  inCluster: true
-
-health:
-  scrapeIntervalSeconds: 60
-  enabledCollectors:
-    - node
-    - pod
-    - controlplane
-  alertThresholds:
-    cpuUtilizationPercent: 80
-    memoryUtilizationPercent: 85
-    podRestarts: 5
-
-cost:
-  updateIntervalMinutes: 15
-  cloudProvider: "aws"  # aws, gcp, azure, or leave empty for cloud-agnostic mode
-  pricingApiEndpoint: ""
-  storageBackend: "sqlite"
-
-optimization:
-  enableAutoScaling: true
-  idleResourceThreshold: 0.2
-  rightsizingThreshold: 0.6
-  enableSpotRecommender: true
-  minimumSavingsPercent: 20
-  optimizationIntervalHours: 24
-  applyRecommendations: false  # Set to true to automatically apply recommendations
-  dryRun: true  # Set to false to actually make changes
-```
-
-### Cloud Provider Configuration
+### Cloud Provider Setup
 
 #### AWS
-
 ```yaml
 cost:
-  cloudProvider: "aws"
-  pricingApiEndpoint: "https://pricing.us-east-1.amazonaws.com"
+  aws:
+    region: us-west-2
+    access_key_id: your-access-key
+    secret_access_key: your-secret-key
 ```
 
 #### GCP
-
 ```yaml
 cost:
-  cloudProvider: "gcp"
-  pricingApiEndpoint: "https://cloudbilling.googleapis.com/v1"
+  gcp:
+    project_id: your-project-id
+    service_account_path: /path/to/service-account.json
 ```
 
 #### Azure
-
 ```yaml
 cost:
-  cloudProvider: "azure"
-  pricingApiEndpoint: ""  # Uses default endpoint
+  azure:
+    subscription_id: your-subscription-id
+    client_id: your-client-id
+    client_secret: your-client-secret
+    tenant_id: your-tenant-id
 ```
-
-## Architecture
-
-KubeCostGuard consists of several core components:
-
-1. **Health Monitor**: Collects and analyzes Kubernetes resource health metrics
-2. **Cost Analyzer**: Retrieves and processes cost data from cloud providers
-3. **Optimizer**: Generates and applies cost optimization recommendations
-4. **API Server**: Provides RESTful API endpoints for the dashboard and integrations
-5. **Storage Backend**: Persists historical data and configuration
-
-![Architecture Diagram](docs/images/architecture.png)
 
 ## Development
 
-### Prerequisites
-
-- Go 1.21+
-- Docker
-- Kubernetes cluster (for testing)
-- Access to one of the supported cloud providers (for cost analysis)
-
-### Building from Source
-
-```bash
-# Clone the repository
-git clone https://github.com/yourusername/kubecostguard.git
-cd kubecostguard
-
-# Build the binary
-make build
-
-# Run locally
-./kubecostguard --config=config.yaml
-
-# Build Docker image
-make docker-build
-```
-
 ### Project Structure
-
 ```
 kubecostguard/
-├── cmd/
-│   └── kubecostguard/         # Application entry point
-├── internal/
-│   ├── api/                   # API server
+├── cmd/kubecostguard/          # Application entry point
+├── internal/                   # Private application code
+│   ├── api/                   # REST API implementation
 │   ├── config/                # Configuration management
-│   ├── cost/                  # Cost analysis
-│   │   ├── providers/         # Cloud provider integrations
-│   │   └── recommender/       # Cost optimization recommendations
 │   ├── health/                # Health monitoring
-│   │   ├── collectors/        # Metric collectors
-│   │   └── alerting/          # Alert management
-│   ├── kubernetes/            # Kubernetes client
-│   └── optimization/          # Optimization actions
+│   ├── cost/                  # Cost management
+│   ├── optimization/          # Optimization logic
+│   └── kubernetes/            # Kubernetes client
 ├── pkg/                       # Public packages
-├── deployments/               # Deployment manifests
-│   ├── helm/                  # Helm chart
-│   └── kustomize/             # Kustomize configuration
-├── config/                    # Configuration files
-├── ui/                        # Web UI components
-├── docs/                      # Documentation
-└── examples/                  # Example configurations
+│   ├── metrics/               # Metrics collection
+│   └── utils/                 # Utility functions
+└── deployments/               # Deployment manifests
 ```
 
-## API Reference
+### Building
+```bash
+# Build for current platform
+make build
 
-KubeCostGuard provides a comprehensive REST API for integration with other tools.
+# Build for all platforms
+make build-all
 
-### Health Endpoints
+# Run tests
+make test
 
-- `GET /api/health/status`: Overall health status
-- `GET /api/health/metrics`: Detailed health metrics
-- `GET /api/health/alerts`: Active alerts
+# Run with coverage
+make test-coverage
+```
 
-### Cost Endpoints
-
-- `GET /api/cost/summary`: Cost summary
-- `GET /api/cost/namespaces`: Costs by namespace
-- `GET /api/cost/nodes`: Costs by node
-- `GET /api/cost/trends`: Cost trends over time
-
-### Optimization Endpoints
-
-- `GET /api/optimize/recommendations`: Get optimization recommendations
-- `POST /api/optimize/apply/:id`: Apply a specific recommendation
-- `GET /api/optimize/history`: Optimization history
-
-## Supported Kubernetes Distributions
-
-- Amazon EKS
-- Google GKE
-- Microsoft AKS
-- Red Hat OpenShift
-- Vanilla Kubernetes
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.
-
-### Development Workflow
-
+### Contributing
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Run tests: `make test`
+4. Add tests
 5. Submit a pull request
+
+## Monitoring
+
+### Prometheus Metrics
+KubeCostGuard exposes various metrics for monitoring:
+- `kubecostguard_node_health` - Node health status
+- `kubecostguard_pod_health` - Pod health status
+- `kubecostguard_cost_dollars` - Cost metrics by provider/service
+- `kubecostguard_alerts_total` - Alert counters
+
+### Grafana Dashboards
+Pre-built Grafana dashboards are available in the `docs/grafana/` directory.
 
 ## License
 
-KubeCostGuard is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
-## Community
-
-- Join our Slack channel (https://join.slack.com/share/enQtODkxNjU5MDkyMDY3Ny02NmNhZGQwZjE3NWI1NzY4YjhhMmE4NzllNGE5Y2EyZmU1MmMxZGViODA2MzFlMDdlYWI4NjUzOTYxYjc4ODll)
-- Follow us on Twitter (https://twitter.com/kubecostguard)
-- Check out our blog (https://ochestra.io/kubeopera)
-
-## FAQ
-
-### How does KubeCostGuard calculate costs?
-
-KubeCostGuard uses cloud provider APIs to retrieve current pricing information and combines it with Kubernetes resource usage metrics to calculate costs. For on-premise clusters, it uses a configurable cost model.
-
-### Does KubeCostGuard require special permissions?
-
-Yes, KubeCostGuard needs read access to Kubernetes resources and, depending on your cloud provider, specific IAM permissions to access cost data and make optimization recommendations.
-
-### Can KubeCostGuard automatically apply optimizations?
-
-Yes, by setting `applyRecommendations: true` in the configuration, KubeCostGuard can automatically apply certain optimizations. Use the `dryRun: true` setting to simulate changes without applying them.
-
-### How accurate are the cost estimates?
-
-KubeCostGuard provides cost estimates based on current pricing information from cloud providers. While these estimates are generally accurate, actual billing may vary due to discounts, reserved instances, or other factors.
-
-## Roadmap
-
-- [ ] Enhanced multi-cluster support
-- [ ] Machine learning-based cost forecasting
-- [ ] Custom optimization policy engine
-- [ ] Integration with CI/CD pipelines for cost-aware deployments
-- [ ] Support for additional cloud providers
-- [ ] Cost anomaly detection
-
-## Acknowledgments
-
-- The Kubernetes community
-- All our contributors and supporters
-- Open-source projects that inspired us
+This project is licensed under the MIT License - see the LICENSE file for details.

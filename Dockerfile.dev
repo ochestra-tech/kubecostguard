@@ -1,0 +1,21 @@
+# File: Dockerfile.dev
+# Development Dockerfile with hot-reloading
+FROM golang:1.21
+
+# Install necessary tools for development
+RUN go install github.com/cosmtrek/air@latest
+
+# Set working directory
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+
+# Download dependencies
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Use air for hot reloading
+CMD ["air", "-c", ".air.toml"]

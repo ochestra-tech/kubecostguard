@@ -56,6 +56,58 @@ type IdleResourceRecommendation struct {
 	Details              map[string]interface{}
 }
 
+func (i IdleResourceRecommendation) GetID() string { panic("implement me") }
+
+func (i IdleResourceRecommendation) GetType() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetResourceName() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetPotentialSavings() float64 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetPriority() int {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetConfidence() float64 {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetDescription() string {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetDetails() map[string]interface{} {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) GetCreatedAt() time.Time {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) Apply() error {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (i IdleResourceRecommendation) Simulate() (map[string]interface{}, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // ResourceAllocation represents allocatable resources
 type ResourceAllocation struct {
 	CPU     resource.Quantity

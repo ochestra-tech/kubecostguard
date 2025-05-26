@@ -96,7 +96,7 @@ func AuthMiddleware(jwtKey string, authEnabled bool) gin.HandlerFunc {
 		}
 
 		// Validate JWT token
-		token, err := validateJWT(parts[1], jwtKey)
+		token, err := ValidateJWT(parts[1], jwtKey)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"error": fmt.Sprintf("Invalid token: %v", err),
