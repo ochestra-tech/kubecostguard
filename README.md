@@ -85,6 +85,10 @@ KubeCostGuard is a comprehensive Kubernetes cost optimization and health monitor
    ```bash
    make deploy-helm
    ```
+3. **Deploy with Kustomize**
+   ```bash
+   make deploy-kustomize
+   ```
 
 ### API Endpoints
 

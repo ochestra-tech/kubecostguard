@@ -1,0 +1,65 @@
+# Example configuration file for KubeCostGuard
+server:
+  port: 8080
+  host: "0.0.0.0"
+  # tls_cert: "/path/to/cert.pem"  # Optional TLS certificate
+  # tls_key: "/path/to/key.pem"    # Optional TLS key
+
+kubernetes:
+  in_cluster: true
+  # config_path: "/path/to/kubeconfig"  # Used when in_cluster is false
+  namespace: ""  # Empty means all namespaces
+
+health:
+  interval: 30s
+  alert_thresholds:
+    cpu_threshold: 80.0      # CPU usage percentage
+    memory_threshold: 85.0   # Memory usage percentage
+    disk_threshold: 90.0     # Disk usage percentage
+  
+  notifications:
+    slack:
+      enabled: false
+      webhook_url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+      channel: "#alerts"
+    
+    email:
+      enabled: false
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: "your-email@gmail.com"
+      password: "your-app-password"
+      to:
+        - "admin@yourcompany.com"
+        - "devops@yourcompany.com"
+    
+    webhook:
+      enabled: false
+      url: "https://your-webhook-endpoint.com/alerts"
+
+cost:
+  update_interval: 5m
+  providers: ["aws"]  # Available: aws, gcp, azure
+  
+  aws:
+    region: "us-west-2"
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+  
+  gcp:
+    project_id: "your-gcp-project"
+    service_account_path: "/path/to/service-account.json"
+  
+  azure:
+    subscription_id: "your-subscription-id"
+    client_id: "your-client-id"
+    client_secret: "your-client-secret"
+    tenant_id: "your-tenant-id"
+
+optimization:
+  auto_scale: false                    # Enable automatic scaling
+  bin_packing: true                   # Enable bin packing recommendations
+  spot_recommendations: true          # Enable spot instance recommendations
+  recommendation_interval: 10m       # How often to generate recommendations
+
+log_level: "info"  # Available: debug, info, warn, error

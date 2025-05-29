@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubecostguard-config
+  namespace: kubecostguard
+data:
+  config.yaml: |
+    server:
+      port: 8080
+      host: "0.0.0.0"
+    
+    kubernetes:
+      in_cluster: true
+      namespace: ""
+    
+    health:
+      interval: 30s
+      alert_thresholds:
+        cpu_threshold: 80.0
+        memory_threshold: 85.0
+        disk_threshold: 90.0
+    
+    cost:
+      update_interval: 5m
+      providers: ["aws"]
+    
+    optimization:
+      auto_scale: false
+      bin_packing: true
+      spot_recommendations: true
+      recommendation_interval: 10m
+    
+    log_level: info

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kubecostguard-data
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: standard

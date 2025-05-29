@@ -1,0 +1,35 @@
+# Example configuration for AWS environment
+server:
+  port: 8080
+  host: "0.0.0.0"
+
+kubernetes:
+  in_cluster: true
+
+health:
+  interval: 30s
+  alert_thresholds:
+    cpu_threshold: 80.0
+    memory_threshold: 85.0
+    disk_threshold: 90.0
+  notifications:
+    slack:
+      enabled: true
+      webhook_url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+      channel: "#cost-alerts"
+
+cost:
+  update_interval: 5m
+  providers: ["aws"]
+  aws:
+    region: "us-west-2"
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+
+optimization:
+  auto_scale: false
+  bin_packing: true
+  spot_recommendations: true
+  recommendation_interval: 10m
+
+log_level: "info"

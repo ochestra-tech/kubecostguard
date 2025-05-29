@@ -1,0 +1,51 @@
+# Example configuration for multi-cloud environment
+server:
+  port: 8080
+  host: "0.0.0.0"
+
+kubernetes:
+  in_cluster: true
+
+health:
+  interval: 30s
+  alert_thresholds:
+    cpu_threshold: 75.0
+    memory_threshold: 80.0
+    disk_threshold: 85.0
+  notifications:
+    slack:
+      enabled: true
+      webhook_url: "${SLACK_WEBHOOK_URL}"
+      channel: "#infrastructure"
+    email:
+      enabled: true
+      smtp_host: "smtp.gmail.com"
+      smtp_port: 587
+      username: "${EMAIL_USERNAME}"
+      password: "${EMAIL_PASSWORD}"
+      to:
+        - "devops@company.com"
+
+cost:
+  update_interval: 5m
+  providers: ["aws", "gcp", "azure"]
+  aws:
+    region: "us-west-2"
+    access_key_id: "${AWS_ACCESS_KEY_ID}"
+    secret_access_key: "${AWS_SECRET_ACCESS_KEY}"
+  gcp:
+    project_id: "${GCP_PROJECT_ID}"
+    service_account_path: "/etc/gcp/service-account.json"
+  azure:
+    subscription_id: "${AZURE_SUBSCRIPTION_ID}"
+    client_id: "${AZURE_CLIENT_ID}"
+    client_secret: "${AZURE_CLIENT_SECRET}"
+    tenant_id: "${AZURE_TENANT_ID}"
+
+optimization:
+  auto_scale: true
+  bin_packing: true
+  spot_recommendations: true
+  recommendation_interval: 5m
+
+log_level: "info"

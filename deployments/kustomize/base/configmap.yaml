@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubecostguard-config
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+data:
+  config.yaml: |
+    kubernetes:
+      kubeconfig: ""
+      inCluster: true
+
+    health:
+      scrapeIntervalSeconds: 60
+      enabledCollectors:
+        - node
+        - pod
+        - controlplane
+      alertThresholds:
+        cpuUtilizationPercent: 80
+        memoryUtilizationPercent: 85
+        podRestarts: 5
+
+    cost:
+      updateIntervalMinutes: 15
+      cloudProvider: "aws"  # Change to your cloud provider
+      pricingApiEndpoint: ""
+      storageBackend: "sqlite"
+      storagePath: "/data/kubecostguard.db"
+
+    optimization:
+      enableAutoScaling: true
+      idleResourceThreshold: 0.2
+      rightsizingThreshold: 0.6
+      enableSpotRecommender: true
+      minimumSavingsPercent: 20
+      optimizationIntervalHours: 24
+      applyRecommendations: false
+      dryRun: true
+
+    api:
+      port: 8080
+      tlsEnabled: false
+      tlsCertPath: ""
+      tlsKeyPath: ""
+      authentication:
+        enabled: false
+        type: "jwt"
+        jwtKey: ""

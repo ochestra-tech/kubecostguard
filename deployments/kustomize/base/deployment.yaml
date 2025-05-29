@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubecostguard
+  namespace: kubecostguard
+  labels:
+    app.kubernetes.io/name: kubecostguard
+    app.kubernetes.io/part-of: kubecostguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kubecostguard
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kubecostguard
+        app.kubernetes.io/part-of: kubecostguard
+    spec:
+      serviceAccountName: kubecostguard
+      containers:
+        - name: kubecostguard
+          image: yourdockerhub/kubecostguard:latest
+          imagePullPolicy: Always
+          args:
+            - "--config=/etc/kubecostguard/config.yaml"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/kubecostguard
+            - name: data-volume
+              mountPath: /data
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AWS_ACCESS_KEY_ID
+                  optional: true
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AWS_SECRET_ACCESS_KEY
+                  optional: true
+            - name: GCP_SERVICE_ACCOUNT_JSON
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: GCP_SERVICE_ACCOUNT_JSON
+                  optional: true
+            - name: AZURE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AZURE_CLIENT_ID
+                  optional: true
+            - name: AZURE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kubecostguard-secrets
+                  key: AZURE_CLIENT_SECRET
+                  optional: true
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          livenessProbe:
+            httpGet:
+              path: /api/health/status
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/health/status
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kubecostguard-config
+        - name: data-volume
+          persistentVolumeClaim:
+            claimName: kubecostguard-data

@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubecostguard
+  namespace: kubecostguard
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kubecostguard
+  template:
+    metadata:
+      labels:
+        app: kubecostguard
+    spec:
+      serviceAccountName: kubecostguard
+      containers:
+      - name: kubecostguard
+        image: kubecostguard:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/v1/ready
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - name: config
+          mountPath: /etc/kubecostguard
+          readOnly: true
+        env:
+        - name: LOG_LEVEL
+          value: "info"
+      volumes:
+      - name: config
+        configMap:
+          name: kubecostguard-config

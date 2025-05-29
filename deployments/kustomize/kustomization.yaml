@@ -1,0 +1,33 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+metadata:
+  name: kubecostguard
+
+resources:
+  - namespace.yaml
+  - serviceaccount.yaml
+  - rbac.yaml
+  - configmap.yaml
+  - deployment.yaml
+  - service.yaml
+
+namespace: kubecostguard
+
+commonLabels:
+  app.kubernetes.io/name: kubecostguard
+  app.kubernetes.io/version: "0.1.0"
+
+images:
+  - name: kubecostguard
+    newName: kubecostguard/kubecostguard
+    newTag: latest
+
+configMapGenerator:
+  - name: kubecostguard-config
+    files:
+      - config.yaml
+
+replicas:
+  - name: kubecostguard
+    count: 1
